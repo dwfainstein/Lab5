@@ -1,0 +1,121 @@
+---
+title: "Lab 5"
+author: "David Fainstein"
+date: "October 21, 2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE) 
+```
+
+1. Create a RStudio Project on your machine.
+
+* Within the Project create a folder for *data* and *scripts*.
+* Download the following three datasets into the project *data* folder.
+  + *sesame13.sav*
+  + *star.csv*
+  + *ais.xlsx*
+
+2. Read in the following three datasets, using `{here}` and `{rio}`:
+  * *sesame13.sav*
+  * *star.csv*
+  * *ais.xlsx*
+  
+**Hint**: For the *ais.xlsx* dataset look at the `skip` argument within the `rio` help documentation.
+  
+```{r import}
+
+library(rio)
+library(tidyverse)
+library(here)
+library(openxlsx)
+library(foreign)
+
+sesame <- import(here("data", "sesame13.sav"))
+ais <- import(here("data", "ais.xlsx"), skip = 15)
+star <- import(here("data", "star.csv"))
+
+```
+
+3. Using the `ais` data, compute the average red blood cell count and average bmi by sport. Output these data as SPSS and EXCEL files. 
+
+```{r q2}
+
+ais %>%
+  select("rcc", "bmi") %>%
+  summarize(mean_rcc = mean(rcc), mean_bmi = mean(bmi)) %>% 
+  export(here("data", "means.xlsx")) 
+
+ais %>%
+  select("rcc", "bmi") %>%
+  summarize(mean_rcc = mean(rcc), mean_bmi = mean(bmi)) %>% 
+  export(here("data", "means2.sav")) 
+```
+
+4. Use the `sesame` dataset to answer the following question: Was the average female age higher in schools or at home? 
+
+```{r q3}
+
+sesame %>% 
+  select("sex", "age", "setting") %>% 
+  filter(sex == "2") %>% 
+  group_by(setting) %>% 
+  summarize(mean_age_schools = mean(age))
+  
+```
+Note: could not tell which sex (1,2) represented which gender, nor which setting (0,1) represented home or school. With that information, then the question is answerable with the data made available
+
+
+5. First, how many rows and columns are in the *star* dataset? Next, remove outliers using a really poor method, just for practice, by eliminating students whose math (*tmathss*) scores were more than three standard deviations **above or below** the corresponding mean. How many rows are in the dataset now?
+
+```{r q4}
+nrow(star)
+ncol(star)
+
+sdcrit <- sd(star$tmathss)*3
+meanvalue <- mean(star$tmathss)
+lowerbound <- meanvalue-sdcrit
+upperbound <- meanvalue+sdcrit
+
+star2 <- star %>% 
+  filter(tmathss > lowerbound, tmathss < upperbound)
+  
+
+nrow(star2)
+ncol(star2)
+```
+We went from 5748 rows to 5743 rows. That's not very many outliers removed!
+
+
+6. Use the `star` dataset to compute standardized math and reading scores; name these variables *tmathss* and *treadss*. This means, for each of these variables, subtract the mean from each observation and divide by the standard deviation: $x_s = \frac{x_i - \bar{X}}{sd(X)}$. 
+  + Check that your computations were correct by computing the mean and standard deviation of each variable (they should be 0 and 1). 
+  + Compute the mean of the standardized variable for all *sex*/*frl* combinations (I'm asking you to extend what you know here, we haven't talked explicitly about how to do this yet, but you have seen examples). 
+  + What do you make of these findings? Do you see an effect by *sex*? An *FRL* effect? Is there evidence of an interaction (i.e., that the effect of *FRL* is greater for boys versus girls)?
+
+```{r q5}
+
+sdvalue <- sd(star$tmathss)
+meanvalue <- mean(star$tmathss)
+sdvalue_r <- sd(star$treadss)
+meanvalue_r <- mean(star$treadss)
+
+
+star3 <- star %>% 
+  mutate(tmathss = (tmathss-meanvalue)/sdvalue) %>% 
+  mutate(treadss = (treadss-meanvalue_r)/sdvalue_r)# %>% 
+#  summarize(mean_r = mean(treadss), sd_r = sd(treadss), mean_m = mean(tmathss), sd_m = sd(tmathss))
+
+star4 <- star3 %>% 
+  select("sex", "frl", "tmathss", "treadss") %>% 
+  group_by(sex, frl) %>% 
+  summarize(mean_m = mean(tmathss), mean_r = mean(treadss))
+
+
+
+```
+Interestingly, the mean of means is not zero for the standardized scores; though, it is exceptionally small. I'm guessing this has something to do with the type of numeric value (e.g., double)?
+
+It looks as though there is an interaction with free-reduced price lunch and students scores because student's of either gender, as coded, scored below the mean on average if they were receiving FRL. 
+
+Please submit you .Rmd file, as well as the rendered .html file.
