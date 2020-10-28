@@ -24,6 +24,8 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE)
   
 **Hint**: For the *ais.xlsx* dataset look at the `skip` argument within the `rio` help documentation.
   
+  I'm changing the code right here
+  
 ```{r import}
 
 library(rio)
