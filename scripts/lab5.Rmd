@@ -33,6 +33,7 @@ library(tidyverse)
 library(here)
 library(openxlsx)
 library(foreign)
+library(packrat)
 
 sesame <- import(here("data", "sesame13.sav"))
 ais <- import(here("data", "ais.xlsx"), skip = 15)
