@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE) 
 ```
+Another code comment
+
 
 1. Create a RStudio Project on your machine.
 
